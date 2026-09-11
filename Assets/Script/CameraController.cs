@@ -7,35 +7,24 @@ public class CameraSwitcher : MonoBehaviour
     [SerializeField] private GameObject myCamera;
 
 
-    public void ToggleLeft()
+    public void GoToMainCamera()
     {
-        // 2. 왼쪽이 켜져 있으면 메인으로, 꺼져 있으면 왼쪽으로!
-        if (leftCamera.activeSelf)
-        {
-            GameManager.Inst.currentCamPos = GameManager.CameraPosition.Mid;
-            ActivateCamera(myCamera);
-        }
-        else
-        {
-            ActivateCamera(leftCamera);
-            GameManager.Inst.currentCamPos = GameManager.CameraPosition.Left;
-        }
+        GameManager.Inst.currentCamPos = GameManager.CameraPosition.Mid;
+        ActivateCamera(myCamera);
     }
 
-    public void ToggleRight()
+    // 왼쪽 컵 뷰로 이동하는 전용 메서드
+    public void GoToLeftCamera()
     {
+        GameManager.Inst.currentCamPos = GameManager.CameraPosition.Left;
+        ActivateCamera(leftCamera);
+    }
 
-        // 2. 오른쪽이 켜져 있으면 메인으로, 꺼져 있으면 오른쪽으로!
-        if (rightCamera.activeSelf)
-        {
-            GameManager.Inst.currentCamPos = GameManager.CameraPosition.Mid;
-            ActivateCamera(myCamera);
-        }
-        else
-        {
-            GameManager.Inst.currentCamPos = GameManager.CameraPosition.Right;
-            ActivateCamera(rightCamera);
-        }
+    // 오른쪽 컵 뷰로 이동하는 전용 메서드
+    public void GoToRightCamera()
+    {
+        GameManager.Inst.currentCamPos = GameManager.CameraPosition.Right;
+        ActivateCamera(rightCamera);
     }
 
 

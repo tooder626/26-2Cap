@@ -1,5 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,47 +9,92 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI angleText;
     [SerializeField] private Image nextBall;
 
-    public void FixedUpdate()
-    {
-        if (GameManager.Inst.gameOver) return;
+    [SerializeField] private GameObject btnGoLeft;
+    [SerializeField] private GameObject btnGoRight;
+    [SerializeField] private GameObject btnGoMain;
 
-        printScore();
-        printAngle();
-        printImage();
+    private void OnEnable()
+    {
+        GameManager.OnScoreChanged += UpdateScoreUI;
+        SpawnManager.OnNextBallChanged += UpdateNextBallUI;
     }
 
-    private void printScore()
+    private void OnDisable()
     {
-        int currentScore = GameManager.Inst.score;
+        GameManager.OnScoreChanged -= UpdateScoreUI;
+        SpawnManager.OnNextBallChanged -= UpdateNextBallUI;
+    }
 
+    private void Start()
+    {
+        // 시작 시 현재 점수 표시
+        UpdateScoreUI(GameManager.Inst.score);
+
+        // 시작 시 다음 공 표시
+        if (SpawnManager.Inst.nextBallQueue.Count > 0)
+        {
+            UpdateNextBallUI(SpawnManager.Inst.getNextBall());
+        }
+
+        // 카메라 버튼 상태 초기화
+        UpdateCameraUI();
+    }
+
+    private void FixedUpdate()
+    {
+        if (GameManager.Inst.gameOver)
+            return;
+
+        PrintAngle();
+    }
+
+    private void UpdateScoreUI(int currentScore)
+    {
         if (scoreText != null)
         {
             scoreText.text = $"Score : {currentScore:D4}";
         }
     }
 
-    private void printAngle()
+    private void UpdateNextBallUI(int nextLevel)
+    {
+        if (nextBall == null)
+            return;
+
+        if (nextLevel >= 0 &&
+            nextLevel < GameManager.Inst.ballList.Count)
+        {
+            Sprite nextSprite =
+                GameManager.Inst.ballList[nextLevel]
+                .GetComponent<SpriteRenderer>()
+                .sprite;
+
+            nextBall.sprite = nextSprite;
+            nextBall.color = Color.white;
+        }
+    }
+
+    private void PrintAngle()
     {
         Transform target = SpawnManager.Inst.GetCurrentTargetBag();
 
         if (target != null && angleText != null)
         {
             float currentAngle = target.eulerAngles.z;
-            if (currentAngle > 180f) currentAngle -= 360f;
 
-            // 기울기의 절대값(크기)을 구합니다.
+            if (currentAngle > 180f)
+                currentAngle -= 360f;
+
             float tiltMagnitude = Mathf.Abs(currentAngle);
 
-            // 텍스트는 원래 각도(+값, -값)를 그대로 표시합니다.
             angleText.text = $"{currentAngle:F0}%";
 
-            if (tiltMagnitude > 20)
+            if (tiltMagnitude > 20f)
             {
                 angleText.color = Color.red;
             }
-            else if (tiltMagnitude > 10)
+            else if (tiltMagnitude > 10f)
             {
-                // 주황색
                 angleText.color = new Color(1f, 0.5f, 0f);
             }
             else
@@ -58,22 +102,40 @@ public class UIManager : MonoBehaviour
                 angleText.color = Color.black;
             }
         }
+        else if (angleText != null)
+        {
+            angleText.text = "-";
+            angleText.color = Color.black;
+        }
     }
 
-    public void printImage()
+    public void UpdateCameraUI()
     {
-        int nextcurrent = SpawnManager.Inst.getNextBall();
-
-        // 큐에서 가져온 값이 유효한지(0 이상이고, ballList 크기보다 작은지) 안전하게 확인
-        if (nextcurrent >= 0 && nextcurrent < GameManager.Inst.ballList.Count)
+        switch (GameManager.Inst.currentCamPos)
         {
-            // 1. 프리팹(게임 오브젝트)에서 SpriteRenderer를 찾아서 이미지(sprite)만 추출합니다.
-            Sprite nextSprite = GameManager.Inst.ballList[nextcurrent].GetComponent<SpriteRenderer>().sprite;
+            case GameManager.CameraPosition.Left:
 
-            // 2. 추출한 이미지를 UI의 Image 컴포넌트에 덮어씌웁니다.
-            nextBall.sprite = nextSprite;   
-            nextBall.color = Color.white;
+                btnGoLeft.SetActive(false);
+                btnGoRight.SetActive(true);
+                btnGoMain.SetActive(true);
 
+                break;
+
+            case GameManager.CameraPosition.Right:
+
+                btnGoLeft.SetActive(true);
+                btnGoRight.SetActive(false);
+                btnGoMain.SetActive(true);
+
+                break;
+
+            case GameManager.CameraPosition.Mid:
+
+                btnGoLeft.SetActive(true);
+                btnGoRight.SetActive(true);
+                btnGoMain.SetActive(false);
+
+                break;
         }
     }
 }

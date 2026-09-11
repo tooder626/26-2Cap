@@ -2,11 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using System;
 
 public class GameManager : Singleton<GameManager>
 {
     public float xLimit = 12f;
-
+    public static event Action<int> OnScoreChanged;
 
     public int score = 0;
     public bool gameOver = false;
@@ -17,7 +18,11 @@ public class GameManager : Singleton<GameManager>
         Right,
         Mid
     }
-
+    public void AddScore(int addedScore)
+    {
+        score += addedScore;
+        OnScoreChanged?.Invoke(score);
+    }
     public CameraPosition currentCamPos = CameraPosition.Mid;
 
     public List<GameObject> ballList = new List<GameObject>();
