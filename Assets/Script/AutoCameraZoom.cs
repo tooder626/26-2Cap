@@ -9,9 +9,9 @@ public class AutoCameraZoom : MonoBehaviour
     [SerializeField] private float tiltThreshold2 = 20f; // 2단계 경계 
 
     [Header("카메라 사이즈 (Zoom)")]
-    [SerializeField] private float defaultZoom = 30f;    // 기본 카메라 사이즈 
+    [SerializeField] private float defaultZoom = 35f;    // 기본 카메라 사이즈 
     [SerializeField] private float midZoom = 40f;        // 중간 줌아웃 사이즈 
-    [SerializeField] private float maxZoom = 50f;        // 최대 줌아웃 사이즈 
+    [SerializeField] private float maxZoom = 45f;        // 최대 줌아웃 사이즈 
 
     [SerializeField] private float zoomSpeed = 2f;       // 줌 전환 속도
 
