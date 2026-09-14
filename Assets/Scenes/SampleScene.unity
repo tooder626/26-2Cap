@@ -1261,6 +1261,8 @@ MonoBehaviour:
   leftParent: {fileID: 1269319774}
   rightParent: {fileID: 1076642579}
   mergeClip: {fileID: 8300000, guid: 728cd15ec8532774cbb981fe64a6d9f8, type: 3}
+  minSpawnLevel: 0
+  baseMaxSpawnLevel: 3
   currentCamera: {fileID: 0}
   canSpawn: 1
 --- !u!114 &1028657257
@@ -1277,6 +1279,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   xLimit: 12
   score: 0
+  currentRound: 0
   gameOver: 0
   gamePaused: 0
   currentCamPos: 2

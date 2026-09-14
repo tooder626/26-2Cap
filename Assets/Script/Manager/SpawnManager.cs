@@ -15,14 +15,18 @@ public class SpawnManager : Singleton<SpawnManager>
     [SerializeField] private Transform rightParent;
     [SerializeField] private AudioClip mergeClip;
 
+    [SerializeField] private int minSpawnLevel = 0;
+    [SerializeField] private int baseMaxSpawnLevel = 3;
+
     public Camera currentCamera;
     public bool canSpawn = true;
 
     private int lastMergeFrame = -1;
     private GameObject previewBall;
     private int currentLevel;
-
     private int forcedNextLevel = -1;
+
+    private int CurrentMaxSpawnLevel => baseMaxSpawnLevel + GameManager.Inst.currentRound;
 
     private void Start()
     {
@@ -30,7 +34,7 @@ public class SpawnManager : Singleton<SpawnManager>
             currentCamera = Camera.main;
 
         if (nextBallQueue.Count == 0)
-            nextBallQueue.Enqueue(UnityEngine.Random.Range(0, 3));
+            nextBallQueue.Enqueue(UnityEngine.Random.Range(minSpawnLevel, CurrentMaxSpawnLevel));
 
         OnNextBallChanged?.Invoke(getNextBall());
     }
@@ -93,9 +97,11 @@ public class SpawnManager : Singleton<SpawnManager>
         if (targetBag == null)
             return false;
 
+        // 터치한 위치를 월드 좌표로 가져옴
         Vector3 worldMousePos =
             currentCamera.ScreenToWorldPoint(Input.mousePosition);
 
+        // X 범위 검사를 위해 로컬 좌표 사용
         Vector3 localMousePos =
             targetBag.InverseTransformPoint(worldMousePos);
 
@@ -104,7 +110,7 @@ public class SpawnManager : Singleton<SpawnManager>
         if (angle > 180f)
             angle -= 360f;
 
-        // 기울기에 따라 안전한 X 범위 계산
+        // 기울기가 커질수록 양 끝의 안전 범위를 줄임
         float safeXLimit = GameManager.Inst.xLimit;
 
         safeXLimit -=
@@ -112,26 +118,31 @@ public class SpawnManager : Singleton<SpawnManager>
 
         safeXLimit = Mathf.Max(safeXLimit, 5f);
 
-        // 처음 클릭한 위치가 범위를 벗어나면 생성하지 않음
+        // 처음 터치한 위치가 범위를 벗어나면 생성하지 않음
         if (isInitialClick &&
             Mathf.Abs(localMousePos.x) > safeXLimit)
         {
             return false;
         }
 
-        // X는 마우스 위치 사용
-        localMousePos.x = Mathf.Clamp(
+        // 드래그 중에는 컵 범위 안으로 제한
+        float clampedLocalX = Mathf.Clamp(
             localMousePos.x,
             -safeXLimit,
             safeXLimit
         );
 
-        // --------------------------------
-        // 바구니 자식들의 가장 높은 위치 찾기
-        // --------------------------------
+        // 제한된 X를 월드 좌표로 변환
+        Vector3 clampedWorldPos =
+            targetBag.TransformPoint(
+                new Vector3(clampedLocalX, 0f, 0f)
+            );
 
+        // 컵의 가장 높은 위치 찾기
         Renderer[] renderers =
             targetBag.GetComponentsInChildren<Renderer>();
+
+        float spawnY = worldMousePos.y;
 
         if (renderers.Length > 0)
         {
@@ -145,26 +156,18 @@ public class SpawnManager : Singleton<SpawnManager>
                 }
             }
 
-            // 바구니의 가장 높은 위치를 로컬 좌표로 변환
-            Vector3 topWorldPos = new Vector3(
-                targetBag.position.x,
-                highestY,
-                targetBag.position.z
-            );
-
-            Vector3 topLocalPos =
-                targetBag.InverseTransformPoint(topWorldPos);
-
-            // 바구니 위쪽 + 공이 들어갈 여유 공간
-            localMousePos.y = topLocalPos.y + 2f;
+            spawnY = highestY + 2f;
         }
         else
         {
-            // Renderer가 없으면 기존 방식의 기본값
-            localMousePos.y = 12f;
+            spawnY = targetBag.position.y + 12f;
         }
 
-        pos = targetBag.TransformPoint(localMousePos);
+        // 터치한 월드 X를 그대로 사용
+        pos = new Vector2(
+            clampedWorldPos.x,
+            spawnY
+        );
 
         return true;
     }
@@ -183,7 +186,8 @@ public class SpawnManager : Singleton<SpawnManager>
 
         if (nextBallQueue.Count == 0)
         {
-            nextBallQueue.Enqueue(UnityEngine.Random.Range(0, 3));
+            // 상단에 정의한 프로퍼티를 사용하여 동적으로 확률/레벨 관리
+            nextBallQueue.Enqueue(UnityEngine.Random.Range(minSpawnLevel, CurrentMaxSpawnLevel));
         }
 
         OnNextBallChanged?.Invoke(getNextBall());
