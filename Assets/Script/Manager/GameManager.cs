@@ -6,7 +6,6 @@ using System;
 
 public class GameManager : Singleton<GameManager>
 {
-    public float xLimit = 12f;
     public static event Action<int> OnScoreChanged;
 
     public int score = 0;
@@ -19,9 +18,18 @@ public class GameManager : Singleton<GameManager>
         Right,
         Mid
     }
+    
+    // 500점씩 볼의 생성 level의 범위가 늘어남 최대 6레벨 까지
     private int RoundCheck(int score)
     {
-        return score / 500;
+        int round = score / 500;
+
+        if (round > 3)
+        {
+            return 3;
+        }
+
+        return round;
     }
 
     public void AddScore(int addedScore)

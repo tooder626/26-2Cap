@@ -15,8 +15,18 @@ public class SpawnManager : Singleton<SpawnManager>
     [SerializeField] private Transform rightParent;
     [SerializeField] private AudioClip mergeClip;
 
+    [Header("스폰 위치 제한")]
+    [SerializeField] private Transform leftBag_LeftPoint;
+    [SerializeField] private Transform leftBag_RightPoint;
+    [SerializeField] private Transform rightBag_LeftPoint;
+    [SerializeField] private Transform rightBag_RightPoint;
+
+    [Header("스폰 레벨 설정")]
     [SerializeField] private int minSpawnLevel = 0;
     [SerializeField] private int baseMaxSpawnLevel = 3;
+
+
+    [SerializeField] private float spawnXOffset = 0.5f;
 
     public Camera currentCamera;
     public bool canSpawn = true;
@@ -34,7 +44,11 @@ public class SpawnManager : Singleton<SpawnManager>
             currentCamera = Camera.main;
 
         if (nextBallQueue.Count == 0)
-            nextBallQueue.Enqueue(UnityEngine.Random.Range(minSpawnLevel, CurrentMaxSpawnLevel));
+        {
+            nextBallQueue.Enqueue(
+                UnityEngine.Random.Range(minSpawnLevel, CurrentMaxSpawnLevel + 1)
+            );
+        }
 
         OnNextBallChanged?.Invoke(getNextBall());
     }
@@ -44,6 +58,14 @@ public class SpawnManager : Singleton<SpawnManager>
         if (GameManager.Inst.gameOver || !canSpawn)
             return;
 
+        Transform targetBag = GetCurrentTargetBag();
+
+        if (targetBag == null)
+            return;
+
+        bool isLeftBag = targetBag == leftParent;
+
+        // 마우스 클릭 시작
         if (Input.GetMouseButtonDown(0))
         {
             if (EventSystem.current != null)
@@ -52,7 +74,9 @@ public class SpawnManager : Singleton<SpawnManager>
                 {
                     if (EventSystem.current.IsPointerOverGameObject(
                         Input.GetTouch(0).fingerId))
+                    {
                         return;
+                    }
                 }
                 else if (EventSystem.current.IsPointerOverGameObject())
                 {
@@ -62,23 +86,35 @@ public class SpawnManager : Singleton<SpawnManager>
 
             Vector2 spawnPos;
 
-            if (TryGetValidSpawnPosition(out spawnPos, true))
+            if (CalculateSpawnPosition(
+                targetBag,
+                isLeftBag,
+                true,
+                out spawnPos))
             {
                 CreatePreviewBall(spawnPos);
             }
         }
+
+        // 마우스 드래그
         else if (Input.GetMouseButton(0))
         {
             if (previewBall != null)
             {
                 Vector2 dragPos;
 
-                if (TryGetValidSpawnPosition(out dragPos, false))
+                if (CalculateSpawnPosition(
+                    targetBag,
+                    isLeftBag,
+                    false,
+                    out dragPos))
                 {
                     previewBall.transform.position = dragPos;
                 }
             }
         }
+
+        // 마우스 떼기
         else if (Input.GetMouseButtonUp(0))
         {
             if (previewBall != null)
@@ -88,61 +124,57 @@ public class SpawnManager : Singleton<SpawnManager>
         }
     }
 
-    private bool TryGetValidSpawnPosition(out Vector2 pos, bool isInitialClick)
+    private bool CalculateSpawnPosition(
+        Transform targetBag,
+        bool isLeftBag,
+        bool isInitialClick,
+        out Vector2 pos)
     {
         pos = Vector2.zero;
 
-        Transform targetBag = GetCurrentTargetBag();
+        Transform leftPoint = isLeftBag
+            ? leftBag_LeftPoint
+            : rightBag_LeftPoint;
 
-        if (targetBag == null)
+        Transform rightPoint = isLeftBag
+            ? leftBag_RightPoint
+            : rightBag_RightPoint;
+
+        if (leftPoint == null || rightPoint == null)
             return false;
 
-        // 터치한 위치를 월드 좌표로 가져옴
-        Vector3 worldMousePos =
+        // 마우스의 월드 좌표
+        Vector3 mouseWorldPos =
             currentCamera.ScreenToWorldPoint(Input.mousePosition);
 
-        // X 범위 검사를 위해 로컬 좌표 사용
-        Vector3 localMousePos =
-            targetBag.InverseTransformPoint(worldMousePos);
+        float mouseX = mouseWorldPos.x;
 
-        float angle = targetBag.eulerAngles.z;
+        // 실제 Point의 월드 X
+        float leftX = leftPoint.position.x;
+        float rightX = rightPoint.position.x;
 
-        if (angle > 180f)
-            angle -= 360f;
+        float minX = Mathf.Min(leftX, rightX) + spawnXOffset;
+        float maxX = Mathf.Max(leftX, rightX) - spawnXOffset;
 
-        // 기울기가 커질수록 양 끝의 안전 범위를 줄임
-        float safeXLimit = GameManager.Inst.xLimit;
-
-        safeXLimit -=
-            Mathf.Max(0f, Mathf.Abs(angle) - 10f) * 0.15f;
-
-        safeXLimit = Mathf.Max(safeXLimit, 5f);
-
-        // 처음 터치한 위치가 범위를 벗어나면 생성하지 않음
+        // 최초 클릭 시 범위 밖이면 생성하지 않음
         if (isInitialClick &&
-            Mathf.Abs(localMousePos.x) > safeXLimit)
+            (mouseX < minX || mouseX > maxX))
         {
             return false;
         }
 
-        // 드래그 중에는 컵 범위 안으로 제한
-        float clampedLocalX = Mathf.Clamp(
-            localMousePos.x,
-            -safeXLimit,
-            safeXLimit
+        // 마우스 X를 컵의 범위 안으로 제한
+        float spawnX = Mathf.Clamp(
+            mouseX,
+            minX,
+            maxX
         );
 
-        // 제한된 X를 월드 좌표로 변환
-        Vector3 clampedWorldPos =
-            targetBag.TransformPoint(
-                new Vector3(clampedLocalX, 0f, 0f)
-            );
+        // 공 생성 Y
+        float spawnY = targetBag.position.y + 12f;
 
-        // 컵의 가장 높은 위치 찾기
         Renderer[] renderers =
             targetBag.GetComponentsInChildren<Renderer>();
-
-        float spawnY = worldMousePos.y;
 
         if (renderers.Length > 0)
         {
@@ -158,36 +190,31 @@ public class SpawnManager : Singleton<SpawnManager>
 
             spawnY = highestY + 2f;
         }
-        else
-        {
-            spawnY = targetBag.position.y + 12f;
-        }
 
-        // 터치한 월드 X를 그대로 사용
         pos = new Vector2(
-            clampedWorldPos.x,
+            spawnX,
             spawnY
         );
 
         return true;
     }
-
     private void CreatePreviewBall(Vector2 spawnPos)
     {
-        if (forcedNextLevel != -1)
-        {
-            currentLevel = forcedNextLevel;
-            forcedNextLevel = -1;
-        }
-        else
-        {
-            currentLevel = nextBallQueue.Dequeue();
-        }
+        currentLevel =
+            (forcedNextLevel != -1)
+            ? forcedNextLevel
+            : nextBallQueue.Dequeue();
+
+        forcedNextLevel = -1;
 
         if (nextBallQueue.Count == 0)
         {
-            // 상단에 정의한 프로퍼티를 사용하여 동적으로 확률/레벨 관리
-            nextBallQueue.Enqueue(UnityEngine.Random.Range(minSpawnLevel, CurrentMaxSpawnLevel));
+            nextBallQueue.Enqueue(
+                UnityEngine.Random.Range(
+                    minSpawnLevel,
+                    CurrentMaxSpawnLevel + 1
+                )
+            );
         }
 
         OnNextBallChanged?.Invoke(getNextBall());
@@ -198,12 +225,14 @@ public class SpawnManager : Singleton<SpawnManager>
             Quaternion.identity
         );
 
-        Rigidbody2D rb = previewBall.GetComponent<Rigidbody2D>();
+        Rigidbody2D rb =
+            previewBall.GetComponent<Rigidbody2D>();
 
         if (rb != null)
             rb.isKinematic = true;
 
-        Collider2D col = previewBall.GetComponent<Collider2D>();
+        Collider2D col =
+            previewBall.GetComponent<Collider2D>();
 
         if (col != null)
             col.enabled = false;
@@ -225,19 +254,17 @@ public class SpawnManager : Singleton<SpawnManager>
             true
         );
 
-        float currentKg =
-            GameManager.Inst.kgList[currentLevel];
-
         previewBall = null;
     }
 
     public void SpawnMergedBall(int level, Vector2 pos)
     {
-        GameObject newCircle = Instantiate(
-            GameManager.Inst.ballList[level],
-            pos,
-            Quaternion.identity
-        );
+        GameObject newCircle =
+            Instantiate(
+                GameManager.Inst.ballList[level],
+                pos,
+                Quaternion.identity
+            );
 
         SetupBallProperties(
             newCircle,
@@ -287,14 +314,18 @@ public class SpawnManager : Singleton<SpawnManager>
         bb.isDroppedByPlayer = isDroppedByPlayer;
 
         ball.name =
-            string.Format("Circle (Level: {0})", level);
+            string.Format(
+                "Circle (Level: {0})",
+                level
+            );
 
         SetBallParent(ball);
     }
 
     private void SetBallParent(GameObject ball)
     {
-        Transform bottleTransform = leftParent.parent;
+        Transform bottleTransform =
+            leftParent.parent;
 
         Vector3 localPos =
             bottleTransform.InverseTransformPoint(
@@ -342,6 +373,7 @@ public class SpawnManager : Singleton<SpawnManager>
         );
     }
 
+    // UIManager에서 사용하는 함수
     public int getNextBall()
     {
         if (forcedNextLevel != -1)

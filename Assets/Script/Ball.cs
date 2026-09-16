@@ -7,7 +7,6 @@ public class Ball
     public Vector2 Pos { get; private set; }
 
     public float speed = 1.0f;
-    // 생성자에 level 추가
     public Ball(int level, float kg, Vector2 pos)
     {
         Level = level;
