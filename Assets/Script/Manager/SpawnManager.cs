@@ -25,7 +25,6 @@ public class SpawnManager : Singleton<SpawnManager>
     [SerializeField] private int minSpawnLevel = 0;
     [SerializeField] private int baseMaxSpawnLevel = 3;
 
-
     [SerializeField] private float spawnXOffset = 0.5f;
 
     public Camera currentCamera;
@@ -284,7 +283,7 @@ public class SpawnManager : Singleton<SpawnManager>
         }
     }
 
-    private void SetupBallProperties(
+    public void SetupBallProperties(
         GameObject ball,
         int level,
         bool isDroppedByPlayer)
@@ -322,7 +321,7 @@ public class SpawnManager : Singleton<SpawnManager>
         SetBallParent(ball);
     }
 
-    private void SetBallParent(GameObject ball)
+    public void SetBallParent(GameObject ball)
     {
         Transform bottleTransform =
             leftParent.parent;

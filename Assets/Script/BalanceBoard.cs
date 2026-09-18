@@ -72,7 +72,7 @@ public class BalanceBoard : MonoBehaviour
 
     private void GameOver()
     {
-        GameManager.Inst.gameOver = true;
+        GameManager.Inst.TriggerGameOver();
         Debug.Log("무게 균형이 무너졌습니다! -> Game Over");
 
     }

@@ -15,25 +15,19 @@ public class DeadLine : MonoBehaviour
         // 이미 게임 오버 상태면 계산 중지
         if (GameManager.Inst.gameOver) return;
 
-        // 데드라인 구역에 공이 1개라도 머물러 있다면? 타이머 시작!
         if (ballsInZone.Count > 0)
         {
             overTime += Time.deltaTime;
 
-            // 💡 여기에 텍스트를 빨갛게 깜빡이게 하거나 경고음을 넣으면 좋습니다!
 
             // 제한 시간이 지나면 게임 오버
             if (overTime >= timeLimit)
             {
-                GameManager.Inst.gameOver = true;
-                Debug.Log(" 공이 데드라인을 넘었습니다! -> Game Over");
-
-                // GameManager에 있는 GameOver 관련 UI를 띄우는 함수를 호출하면 됩니다.
+                GameManager.Inst.TriggerGameOver();
             }
         }
         else
         {
-            // 선을 넘었던 공이 다시 아래로 굴러떨어지거나 합쳐져서 구역이 비워지면 타이머 초기화
             overTime = 0f;
         }
     }

@@ -1,5 +1,6 @@
 using System;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,6 +13,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject btnGoLeft;
     [SerializeField] private GameObject btnGoRight;
     [SerializeField] private GameObject btnGoMain;
+
 
     private void OnEnable()
     {

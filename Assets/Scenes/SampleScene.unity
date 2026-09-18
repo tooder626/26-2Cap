@@ -1291,6 +1291,7 @@ GameObject:
   - component: {fileID: 1028657254}
   - component: {fileID: 1028657256}
   - component: {fileID: 1028657257}
+  - component: {fileID: 1028657258}
   m_Layer: 0
   m_Name: Manager
   m_TagString: Untagged
@@ -1328,9 +1329,13 @@ MonoBehaviour:
   leftParent: {fileID: 1269319774}
   rightParent: {fileID: 1076642579}
   mergeClip: {fileID: 8300000, guid: 728cd15ec8532774cbb981fe64a6d9f8, type: 3}
-  calculator: {fileID: 0}
+  leftBag_LeftPoint: {fileID: 1622988631}
+  leftBag_RightPoint: {fileID: 502434659}
+  rightBag_LeftPoint: {fileID: 1676082543}
+  rightBag_RightPoint: {fileID: 294092912}
   minSpawnLevel: 0
   baseMaxSpawnLevel: 3
+  spawnXOffset: 0.5
   currentCamera: {fileID: 0}
   canSpawn: 1
 --- !u!114 &1028657257
@@ -1345,13 +1350,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0bf36eea5478438498b73dbc572f5de3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  xLimit: 12
-  score: 0
-  currentRound: 0
-  gameOver: 0
-  gamePaused: 0
-  currentCamPos: 2
-  ballList:
+  <ballList>k__BackingField:
   - {fileID: 4358743204841637912, guid: 4f108e6fe683bbd4eb3111aef8e292e0, type: 3}
   - {fileID: 1231102585843879249, guid: 2cc2e138f4bf16d40b73bf296d5c41db, type: 3}
   - {fileID: 1231102585843879249, guid: d263ebe42173679428c32df90f023854, type: 3}
@@ -1362,7 +1361,7 @@ MonoBehaviour:
   - {fileID: 1231102585843879249, guid: dd5b72f1c0a130847a74841b8db27d87, type: 3}
   - {fileID: 1231102585843879249, guid: e025ca2188ee86b4e80feb1f5132d626, type: 3}
   - {fileID: 1231102585843879249, guid: 5021ced8cc72e7a429e2ec6e22b5803e, type: 3}
-  kgList:
+  <kgList>k__BackingField:
   - 0.5
   - 1
   - 2
@@ -1373,6 +1372,18 @@ MonoBehaviour:
   - 12
   - 13
   - 14
+--- !u!114 &1028657258
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1028657252}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3cab965a63e5334390769ab664a2fd7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1048551535
 GameObject:
   m_ObjectHideFlags: 0
